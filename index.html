@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#101820">
   <meta name="description" content="Timecode Logger con estética de cámara, exportación para CapCut, Resolve y Premiere.">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -536,7 +534,10 @@
     $('projectName').onchange=e=>{ data.name=(e.target.value.trim()||'GRABACIÓN NUEVA').toUpperCase(); save(); refreshHeader(); }; $('fpsSetting').onchange=e=>{ data.fps=e.target.value; save(); refreshAll(); }; $('timelineTc').onchange=e=>{ if(parseTc(e.target.value)==null){ message('Timecode inválido'); refreshHeader(); return; } data.timelineTc=e.target.value.trim(); save(); refreshHeader(); }; $('offsetInput').onchange=e=>{ const v=parseStamp(e.target.value,true); if(v==null){ message('Usa ±HH:MM:SS.mmm'); refreshHeader(); return; } data.offsetMs=v; save(); refreshHeader(); }; $('srtMs').onchange=e=>{ data.srtMs=Math.min(3000,Math.max(300,Number(e.target.value)||750)); save(); refreshHeader(); }; $('quickPadIndex').onchange=e=>{ data.quickPadIndex=Math.min(data.pads.length,Math.max(1,Number(e.target.value)||1)); save(); refreshHeader(); }; $('gridCols').onchange=updateGrid; $('gridRows').onchange=updateGrid; $('applyTemplateBtn').onclick=applyTemplate;  $('backupBtn').onclick=backup; $('restoreBtn').onclick=()=>$('restoreFile').click(); $('restoreFile').onchange=e=>{ const f=e.target.files[0]; if(f) restore(f); e.target.value=''; }; $('resetBtn').onclick=resetProject; $('vibrationSetting').onchange=e=>{ data.vibration=e.target.value==='on'; save(); }; $('keepAwakeSetting').onchange=e=>{ data.keepAwake=e.target.value==='on'; if(running){ releaseWake().then(requestWake); } save(); };
 
     window.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') save(); else if(running){ releaseWake().then(requestWake); drawDisplay(); } }); window.addEventListener('pagehide',()=>save()); setInterval(()=>{ if(running) save(); },5000);
-    refreshAll(); if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    refreshAll(); // Archivo autónomo: no instala service worker ni necesita otros archivos.
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+      navigator.serviceWorker.getRegistrations().then(regs => Promise.all(regs.filter(r => r.scope === new URL('./', location.href).href).map(r => r.unregister()))).catch(()=>{});
+    }
   </script>
 </body>
 </html>
