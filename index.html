@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101820">
+  <meta name="description" content="Timecode Logger con estética de cámara, exportación para CapCut, Resolve y Premiere.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Timecode Logger | Camera Keyboard v6</title>
+  <style>
+    :root{
+      --bg:#0f141c;
+      --shell:#131922;
+      --panel:#1a202c;
+      --panel-hi:#232b39;
+      --panel-lo:#0e131b;
+      --line:#36404f;
+      --text:#e9eef5;
+      --sub:#a4aebd;
+      --accent:#73f6cb;
+      --accent-soft:#3ab99b;
+      --warn:#ff7a86;
+      --key-top:#384557;
+      --key-face:#202937;
+      --key-edge:#121922;
+      --screen:#d4fbc9;
+      --screen-dark:#12220f;
+      --screen-line:#334731;
+      --radius:18px;
+      --shadow:0 20px 40px rgba(0,0,0,.38);
+      color-scheme:dark;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:radial-gradient(circle at top,#2a3544 0,#151b25 30%,#0d1218 100%);color:var(--text);font-family:'Poppins',system-ui,-apple-system,sans-serif}
+    body{min-height:100dvh}
+    button,input,select{font:inherit}
+    button{cursor:pointer;touch-action:manipulation;border:0}
+    input,select{outline:none}
+    :focus-visible{outline:3px solid #7bf7d4;outline-offset:2px}
+    .app{width:min(100%,700px);margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) 12px calc(22px + env(safe-area-inset-bottom));}
+
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    .brand h1{font-size:24px;line-height:1;margin:0;font-weight:800;letter-spacing:.02em}
+    .brand p{margin:4px 0 0;color:var(--sub);font-size:12px;letter-spacing:.16em;text-transform:uppercase}
+    .top-actions{display:flex;gap:10px}
+
+    .case-btn,.toolbar-btn,.action-btn,.mini-btn{
+      position:relative;
+      border-radius:14px;
+      color:var(--text);
+      background:linear-gradient(180deg,var(--key-top),var(--key-face));
+      box-shadow:0 4px 0 var(--key-edge), 0 8px 18px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.08);
+      transition:transform .07s ease, box-shadow .07s ease, filter .12s ease;
+    }
+    .case-btn:active,.toolbar-btn:active,.action-btn:active,.mini-btn:active,.keypad .pad-hit:active,.swatch:active,.mode-btn:active{
+      transform:translateY(3px);
+      box-shadow:0 1px 0 var(--key-edge), 0 3px 10px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .case-btn{min-width:48px;min-height:48px;padding:0 14px;font-size:20px}
+
+    .project-strip{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;margin-bottom:12px;background:linear-gradient(180deg,#1d2531,#111822);border:1px solid #2e3949;border-radius:18px;box-shadow:var(--shadow)}
+    .project-name-btn{background:none;color:var(--text);padding:0;text-align:left;min-width:0}
+    .project-name-btn strong{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .project-name-btn small{display:block;color:var(--sub);margin-top:2px}
+    .save-status{font-size:12px;color:var(--accent);white-space:nowrap}
+
+    .monitor{position:relative;padding:16px 14px;border-radius:24px;background:linear-gradient(180deg,#1f2733,#111821);border:1px solid #354050;box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
+    .monitor::before{content:"";position:absolute;inset:10px;border-radius:16px;background:linear-gradient(180deg,#d8fcd1,#a7d49d 55%,#8fbe87);border:2px solid #4f6751;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15), inset 0 0 40px rgba(18,34,15,.12);z-index:0}
+    .monitor::after{content:"";position:absolute;inset:10px;border-radius:16px;background:repeating-linear-gradient(to bottom, rgba(17,36,12,.08) 0px, rgba(17,36,12,.08) 1px, transparent 2px, transparent 4px), linear-gradient(180deg, rgba(255,255,255,.08), transparent 18%, transparent 82%, rgba(0,0,0,.08));mix-blend-mode:multiply;pointer-events:none;z-index:0}
+    .monitor-inner{position:relative;z-index:1;color:var(--screen-dark);padding:10px 12px 8px;min-height:180px}
+    .screen-head,.screen-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+    .screen-left,.screen-right{display:flex;align-items:center;gap:8px}
+    .rec-dot{width:10px;height:10px;border-radius:50%;background:#b0221f;box-shadow:0 0 0 2px rgba(176,34,31,.15),0 0 8px rgba(176,34,31,.45)}
+    .rec-dot.paused{background:#6c7266;box-shadow:none}
+    .tc-main{font-size:clamp(48px,11vw,80px);line-height:.95;text-align:center;letter-spacing:.06em;font-weight:700;font-variant-numeric:tabular-nums;margin:16px 0 8px}
+    .tc-sub{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+    .tc-badge{padding:4px 8px;border:1px solid rgba(18,34,15,.28);border-radius:999px;background:rgba(255,255,255,.18)}
+    .screen-mid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+    .screen-card{padding:8px 10px;border:1px solid rgba(18,34,15,.22);border-radius:12px;background:rgba(255,255,255,.14)}
+    .screen-card span{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
+    .screen-card strong{display:block;margin-top:2px;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .screen-foot{margin-top:14px;padding-top:10px;border-top:1px dashed rgba(18,34,15,.25)}
+
+    .transport{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:10px;margin-bottom:12px}
+    .action-btn{min-height:54px;padding:0 16px;font-weight:700}
+    .action-btn.primary{background:linear-gradient(180deg,#88f6d4,#48dfb6);color:#08130f}
+
+    .toolbar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+    .toolbar-btn{min-height:48px;padding:10px 12px;font-size:14px;font-weight:700}
+    .toolbar-btn.active{background:linear-gradient(180deg,#95f6d6,#55ddb8);color:#08130f}
+
+    .notice{min-height:22px;margin-bottom:10px;color:#c3cad6;font-size:13px}
+
+    .keypad-shell{padding:12px;border-radius:24px;background:linear-gradient(180deg,#1d242f,#0e131b);border:1px solid #2f3947;box-shadow:var(--shadow)}
+    .keypad{display:grid;gap:10px}
+    .pad{
+      position:relative;
+      min-height:110px;
+      border-radius:16px;
+      background:linear-gradient(180deg,#4a596f 0%, #263140 14%, #1a2230 100%);
+      border:1px solid #556073;
+      box-shadow:0 5px 0 #0c1119, 0 12px 18px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.12), inset 0 -14px 20px rgba(0,0,0,.18);
+      overflow:hidden;
+    }
+    .pad::before{content:"";position:absolute;inset:0 0 auto 0;height:6px;background:var(--pad-color,#73f6cb);box-shadow:0 0 12px color-mix(in srgb, var(--pad-color,#73f6cb) 40%, transparent)}
+    .pad.active{box-shadow:0 3px 0 #0c1119, 0 10px 16px rgba(0,0,0,.22), inset 0 0 0 1px color-mix(in srgb, var(--pad-color,#73f6cb) 80%, white 10%), inset 0 -10px 16px rgba(0,0,0,.14)}
+    .pad-hit{position:absolute;inset:0;background:transparent;border:0}
+    .pad-body{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;padding:14px 12px 12px;text-align:center;gap:8px}
+    .pad-label{font-size:clamp(18px,3.4vw,24px);font-weight:800;line-height:1.05;letter-spacing:.02em;word-break:break-word}
+    .pad-meta{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.12em}
+    .pad-dot{width:8px;height:8px;border-radius:50%;background:var(--pad-color,#73f6cb)}
+    .pad-state{position:absolute;right:10px;bottom:8px;font-size:11px;font-weight:700;color:var(--pad-color,#73f6cb);text-transform:uppercase;letter-spacing:.12em}
+
+    .pad.editing{min-height:152px}
+    .pad-editor{display:flex;flex-direction:column;gap:8px;padding:10px}
+    .pad-input{width:100%;background:#101621;color:var(--text);border:1px solid #3f4a5a;border-radius:12px;padding:10px 10px 9px;font-weight:700;text-align:center;text-transform:uppercase}
+    .swatches{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+    .swatch{height:28px;border-radius:10px;background:var(--swatch);border:1px solid rgba(255,255,255,.14);box-shadow:0 3px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.22)}
+    .swatch.selected{outline:2px solid #fff;outline-offset:1px}
+    .mode-row{display:flex;gap:6px}
+    .mode-btn{flex:1;min-height:36px;border-radius:10px;color:var(--text);background:linear-gradient(180deg,#394658,#202937);box-shadow:0 3px 0 #101620, inset 0 1px 0 rgba(255,255,255,.08);font-size:12px;font-weight:700;text-transform:uppercase}
+    .mode-btn.selected{background:linear-gradient(180deg,#8ef6d3,#4fe0b9);color:#07120f}
+
+    .summary{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 4px 0;color:var(--sub);font-size:14px}
+    .summary strong{color:var(--text);font-size:18px}
+
+    .panel{margin-top:12px;padding:16px;border-radius:22px;background:linear-gradient(180deg,#1a202b,#101620);border:1px solid #313a48;box-shadow:var(--shadow)}
+    .panel.hidden{display:none}
+    .panel h2{margin:0 0 12px;font-size:18px}
+    .fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .field{display:grid;gap:6px;color:var(--sub);font-size:13px}
+    .field.full{grid-column:1/-1}
+    .field input,.field select{width:100%;min-height:44px;padding:11px 12px;background:#0e131c;border:1px solid #364150;border-radius:12px;color:var(--text)}
+    .inline-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+    .mini-btn{min-height:42px;padding:10px 12px;font-size:13px;font-weight:600}
+    .note{margin-top:12px;color:var(--sub);font-size:12px;line-height:1.55}
+    .panel-card{margin-top:14px;padding:12px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05)}
+    .panel-card h3{margin:0 0 8px;font-size:15px}
+    .panel-card ul{margin:8px 0 0 18px;padding:0;color:var(--sub);font-size:13px;line-height:1.55}
+
+    dialog{width:min(94vw,640px);max-height:88dvh;overflow:auto;border-radius:20px;background:linear-gradient(180deg,#1c2430,#101722);border:1px solid #36404f;color:var(--text);padding:16px}
+    dialog::backdrop{background:rgba(0,0,0,.58)}
+    .dialog-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+    .dialog-head h3{margin:0;font-size:18px}
+    .marker-list{display:grid;gap:8px}
+    .marker-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:#131a25;border:1px solid #2d3848}
+    .marker-chip{width:12px;height:12px;border-radius:50%;flex:none}
+    .marker-info{flex:1;min-width:0}
+    .marker-info strong{display:block;word-break:break-word}
+    .marker-info small{display:block;margin-top:2px;color:var(--sub)}
+    .dialog-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .empty{text-align:center;padding:18px 0;color:var(--sub)}
+
+    @media (max-width:640px){
+      .transport,.toolbar,.screen-mid,.fields{grid-template-columns:1fr}
+      .transport{grid-template-columns:1fr}
+      .toolbar{grid-template-columns:repeat(2,1fr)}
+      .screen-mid{grid-template-columns:1fr}
+      .tc-main{font-size:clamp(42px,12vw,60px)}
+      .topbar{align-items:flex-start}
+      .project-strip{align-items:flex-start}
+    }
+  
+/* v6: compacto, control de cámara, teclado físico y menú flotante */
+.tc-main{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;letter-spacing:0;font-weight:700;font-size:clamp(37px,10vw,69px);font-family:ui-monospace,"SFMono-Regular",Consolas,monospace;white-space:nowrap;line-height:1;margin:9px 0 7px;transform:translateZ(0)}
+.monitor{padding:9px 10px;margin-bottom:9px;border-radius:17px}.monitor::before,.monitor::after{inset:6px;border-radius:12px}.monitor-inner{padding:6px 9px 4px;min-height:0}.screen-head{font-size:10px;letter-spacing:.05em}.screen-foot{margin-top:5px;padding-top:5px;font-size:9px}.tc-sub{display:flex;flex-wrap:nowrap;justify-content:space-between;gap:4px;font-size:clamp(8px,2.1vw,11px);letter-spacing:0;margin-bottom:5px}.tc-sub span{white-space:nowrap}.screen-mid{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:5px}.screen-card{flex:1;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:4px 8px;min-width:0;border-radius:8px}.screen-card span{font-size:9px;white-space:nowrap}.screen-card strong{font-family:ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums;font-size:clamp(12px,3vw,18px);margin:0}.screen-card:first-child{flex:2}
+.transport{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:11px}.transport .action-btn{min-height:48px;padding:6px;font-size:0!important}.transport .action-btn::first-letter{font-size:23px}.transport .action-btn{font-size:24px!important}.transport .action-btn{color:transparent}.transport .action-btn::before{font-size:24px;color:var(--text);position:absolute;inset:0;display:grid;place-items:center}.transport .action-btn.primary::before{color:#08130f}.transport #undoBtn::before{content:'↶'}.transport #playBtn::before{content:'▶'}.transport #playBtn.playing::before{content:'⏸'}.transport #quickBtn::before{content:'⚑'}
+.toolbar{display:none}.bubble-menu{position:fixed;z-index:40;right:14px;bottom:calc(89px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px}.bubble-menu[hidden]{display:none}.bubble{display:flex;align-items:center;gap:10px;justify-content:flex-start;border:1px solid #5a6b7d;border-radius:30px;padding:8px 15px;background:linear-gradient(180deg,#334358,#182434);color:white;box-shadow:0 5px 0 #090e16,0 10px 20px #0009;animation:floatin .16s ease-out}.bubble span{font-size:21px;min-width:25px}.bubble small{font-size:12px;font-weight:700}.fab{position:fixed;z-index:41;right:15px;bottom:calc(18px + env(safe-area-inset-bottom));width:54px;height:54px;border:1px solid #a0ffdd;border-radius:50%;background:linear-gradient(180deg,#a4ffe0,#48dcb1);color:#0b201a;font-weight:800;font-size:29px;box-shadow:0 5px 0 #186b57,0 10px 22px #0008;transition:transform .1s}.fab:active{transform:translateY(4px);box-shadow:0 1px 0 #186b57,0 5px 10px #0007}@keyframes floatin{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+.color-picker-row{display:flex;align-items:center;justify-content:space-between;gap:5px;font-size:11px;color:#e9eef5}.color-picker-row input{width:42px;height:30px;padding:2px;border-radius:7px;border:1px solid #778194;background:#111b2b}.swatches{grid-template-columns:repeat(6,minmax(0,1fr))}.pad.editing{min-height:152px}.pad-editor{padding:8px;gap:8px}.pad{min-height:clamp(78px,15svh,108px)}.pad-label{font-size:clamp(14px,3vw,23px)}.app{padding-bottom:calc(85px + env(safe-area-inset-bottom))}
+@media(max-width:640px){.transport{grid-template-columns:repeat(3,minmax(0,1fr))}.screen-mid{display:flex}.fields{grid-template-columns:1fr}.monitor-inner{padding:6px 8px 3px}.keypad-shell{padding:8px}.keypad{gap:8px}.brand h1{font-size:20px}}
+</style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <h1>Timecode Logger</h1>
+        <p>camera keyboard edition</p>
+      </div>
+      <div class="top-actions">
+        <button class="case-btn" id="settingsBtn" aria-label="Ajustes">⚙</button>
+      </div>
+    </header>
+
+    <section class="project-strip">
+      <button class="project-name-btn" id="renameBtn" type="button">
+        <strong>GRABACIÓN NUEVA</strong>
+        <small id="projectMeta">3×3 · 9 teclas · 25 fps</small>
+      </button>
+      <div class="save-status" id="saveStatus">● Guardado</div>
+    </section>
+
+    <section class="monitor">
+      <div class="monitor-inner">
+        <div class="screen-head">
+          <div class="screen-left"><span class="rec-dot paused" id="recDot"></span><span id="recLabel">PAUSED</span></div>
+          <div class="screen-right"><span id="syncLabel">FREE RUN</span><span id="fpsLabel">25 FPS</span></div>
+        </div>
+        <div class="tc-main" id="clock">00:00:00:00</div>
+        <div class="tc-sub"><span id="offsetLabel">OFFSET +00:00:00.000</span><span id="realMsLabel">LOCAL 00:00:00</span></div>
+        <div class="screen-mid"><div class="screen-card"><span>TC</span><strong id="timelineLabel">01:00:00:00</strong></div><div class="screen-card"><span>MARCADAS</span><strong id="markerCount">0</strong></div></div><span id="openRangeCount" hidden>0</span>
+        <div class="screen-foot">
+          <div>TC LOGGER READY</div>
+          <div id="displayModeLabel">DISPLAY HH:MM:SS:FF</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="transport">
+      <button class="action-btn" id="undoBtn" type="button">↶ Deshacer</button>
+      <button class="action-btn primary" id="playBtn" type="button">▶ Iniciar</button>
+      <button class="action-btn" id="quickBtn" type="button">⚑ Marca rápida</button>
+    </section>
+
+    <nav class="bubble-menu" id="bubbleMenu" aria-label="Acciones" hidden>
+      <button class="bubble" id="editToggle" type="button" aria-label="Editar botones"><span>✎</span><small>Editar</small></button>
+      <button class="bubble" id="historyBtn" type="button" aria-label="Historial"><span>☷</span><small>Historial</small></button>
+      <button class="bubble" id="projectBtn" type="button" aria-label="Proyecto"><span>▣</span><small>Proyecto</small></button>
+      <button class="bubble" id="exportBtn" type="button" aria-label="Exportar"><span>↓</span><small>Exportar</small></button>
+    </nav>
+    <button class="fab" id="fabBtn" type="button" aria-label="Abrir herramientas" aria-expanded="false">⌃</button>
+
+    <div class="notice" id="notice" aria-live="polite"></div>
+
+    <section class="keypad-shell">
+      <div class="keypad" id="grid"></div>
+      <div class="summary">
+        <div><strong id="summaryCount">0</strong> marcas guardadas</div>
+        <div>TOCA PARA MARCAR</div><span id="summaryRanges" hidden>0</span>
+      </div>
+    </section>
+
+    <section class="panel hidden" id="projectPanel">
+      <h2>Proyecto, exportación e integración</h2>
+      <div class="fields">
+        <label class="field full">Nombre del proyecto
+          <input id="projectName" maxlength="80" placeholder="Nombre del proyecto">
+        </label>
+        <label class="field">FPS de edición
+          <select id="fpsSetting">
+            <option value="23.976">23.976 fps</option>
+            <option value="24">24 fps</option>
+            <option value="25">25 fps</option>
+            <option value="29.97">29.97 fps</option>
+            <option value="30">30 fps</option>
+            <option value="50">50 fps</option>
+            <option value="59.94">59.94 fps</option>
+            <option value="60">60 fps</option>
+          </select>
+        </label>
+        <label class="field">Timecode inicial de timeline
+          <input id="timelineTc" placeholder="01:00:00:00">
+        </label>
+        <label class="field">Desfase manual (±HH:MM:SS.mmm)
+          <input id="offsetInput" placeholder="+00:00:00.000">
+        </label>
+        <label class="field">Duración SRT para CapCut (ms)
+          <input id="srtMs" type="number" min="300" max="3000" step="50">
+        </label>
+        <label class="field">Marca rápida usa botón #
+          <input id="quickPadIndex" type="number" min="1" step="1">
+        </label>
+        <label class="field">Columnas
+          <input id="gridCols" type="number" min="1" max="6" step="1">
+        </label>
+        <label class="field">Filas
+          <input id="gridRows" type="number" min="1" max="8" step="1">
+        </label>
+        <label class="field full">Plantilla
+          <select id="templateSelect">
+            <option value="general">General</option>
+            <option value="worship">Alabanza</option>
+            <option value="sermon">Predicación</option>
+            <option value="interview">Entrevista</option>
+          </select>
+        </label>
+      </div>
+      <div class="inline-actions">
+        <button class="mini-btn" id="applyTemplateBtn" type="button">Aplicar plantilla</button>
+
+        <button class="mini-btn" id="backupBtn" type="button">Exportar respaldo</button>
+        <button class="mini-btn" id="restoreBtn" type="button">Restaurar respaldo</button>
+        <button class="mini-btn" id="resetBtn" type="button">Nuevo proyecto</button>
+      </div>
+      <input id="restoreFile" type="file" accept="application/json" hidden>
+      <div class="panel-card">
+        <h3>Conexión real de timecode</h3>
+        <ul><li><strong>Disponible:</strong> referencia mediante claqueta + desfase; no es conexión directa.</li><li><strong>Conexión física real:</strong> USB/PTP, Wi-Fi/SDK o LTC externo solo cuando el modelo lo soporte y mediante adaptador o puente apropiado.</li><li><strong>Verificación:</strong> compara una marca al inicio y otra al final para detectar desfases o deriva.</li></ul>
+      </div>
+      <p class="note">La pantalla usa timecode de fotogramas y un contador local sin milisegundos visibles. La precisión interna se conserva. Una conexión directa a la cámara depende de las interfaces del modelo y no queda habilitada automáticamente.</p>
+    </section>
+  </main>
+
+  <dialog id="settingsDialog">
+    <div class="dialog-head">
+      <h3>Ajustes rápidos</h3>
+      <button class="mini-btn" id="closeSettings" type="button">Cerrar</button>
+    </div>
+    <div class="fields">
+      <label class="field">Vibración
+        <select id="vibrationSetting">
+          <option value="on">Activada</option>
+          <option value="off">Desactivada</option>
+        </select>
+      </label>
+      <label class="field">Pantalla activa
+        <select id="keepAwakeSetting">
+          <option value="off">Desactivada</option>
+          <option value="on">Activada</option>
+        </select>
+      </label>
+    </div>
+  </dialog>
+
+  <dialog id="historyDialog">
+    <div class="dialog-head">
+      <h3>Historial de marcas</h3>
+      <button class="mini-btn" id="closeHistory" type="button">Cerrar</button>
+    </div>
+    <div class="marker-list" id="historyList"></div>
+  </dialog>
+
+  <dialog id="markerDialog">
+    <div class="dialog-head">
+      <h3>Editar marca</h3>
+      <button class="mini-btn" id="closeMarkerDialog" type="button">Cerrar</button>
+    </div>
+    <div class="fields">
+      <label class="field full">Etiqueta
+        <input id="markerLabelInput" maxlength="80">
+      </label>
+      <label class="field">Inicio
+        <input id="markerStartInput" placeholder="00:00:00.000">
+      </label>
+      <label class="field">Fin local
+        <input id="markerEndInput" placeholder="00:00:00.000">
+      </label>
+    </div>
+    <div class="dialog-actions">
+      <button class="mini-btn" id="deleteMarkerBtn" type="button">Eliminar</button>
+      <button class="action-btn primary" id="saveMarkerBtn" type="button">Guardar</button>
+    </div>
+  </dialog>
+
+  <dialog id="exportDialog">
+    <div class="dialog-head">
+      <h3>Exportar marcadores</h3>
+      <button class="mini-btn" id="cancelExport" type="button">Cerrar</button>
+    </div>
+    <div class="fields">
+      <label class="field">Formato
+        <select id="exportFormat">
+          <option value="srt">SRT para CapCut</option>
+          <option value="edl">EDL para DaVinci Resolve</option>
+          <option value="xml">XML FCP7 para Premiere</option>
+          <option value="csv">CSV</option>
+          <option value="json">JSON</option>
+        </select>
+      </label>
+      <label class="field">Prefijo de color
+        <select id="prefixMode">
+          <option value="name">Nombre del color</option>
+          <option value="icon">Icono/color</option>
+          <option value="none">Sin prefijo</option>
+        </select>
+      </label>
+    </div>
+    <p class="note" id="exportSummary"></p>
+    <div class="dialog-actions">
+      <button class="action-btn primary" id="confirmExport" type="button">Descargar</button>
+    </div>
+  </dialog>
+
+  <script>
+    const STORAGE_KEY='timecode_logger_v5';
+    const PALETTE=['#73f6cb','#cbd3df','#f6f8fb','#8f99ab','#4d6488','#f59e0b'];
+    const COLOR_INFO={
+      '#73f6cb':{name:'TEAL',icon:'🟢',resolve:'Green'},
+      '#cbd3df':{name:'SILVER',icon:'⚪',resolve:'Blue'},
+      '#f6f8fb':{name:'ICE',icon:'⚪',resolve:'White'},
+      '#8f99ab':{name:'SLATE',icon:'🔘',resolve:'Blue'},
+      '#4d6488':{name:'STEEL',icon:'🔵',resolve:'Blue'},
+      '#f59e0b':{name:'AMBER',icon:'🟠',resolve:'Yellow'}
+    };
+    const TEMPLATES={
+      general:['INICIO','TOMA BUENA','CORTE','ERROR','PLANO B','AUDIO','REPETIR','APLAUSO','FIN'],
+      worship:['INTRO','VERSO','CORO','PUENTE','PASTOR','ORACIÓN','PÚBLICO','AMÉN','FIN'],
+      sermon:['INTRO','TEXTO','PUNTO 1','PUNTO 2','PUNTO 3','FRASE','AMÉN','APLAUSO','CIERRE'],
+      interview:['INICIO','PREGUNTA','RESPUESTA','B-ROLL','DETALLE','RISAS','PAUSA','REPETIR','CIERRE']
+    };
+    const $=id=>document.getElementById(id);
+    let running=false, startedPerf=0, rafId=0, wakeLock=null, editingMarkerId=null, editMode=false;
+
+    function defaultPad(i,label){
+      return {id:(crypto.randomUUID?crypto.randomUUID():'pad_'+Date.now()+'_'+i), label:(label||`MARK ${i+1}`).toUpperCase(), color:PALETTE[i%PALETTE.length], mode:'point'};
+    }
+    function fresh(){
+      const cols=3, rows=3; const pads=Array.from({length:cols*rows},(_,i)=>defaultPad(i, TEMPLATES.general[i]));
+      return {version:5,name:'GRABACIÓN NUEVA',fps:'25',timelineTc:'01:00:00:00',offsetMs:0,srtMs:750,quickPadIndex:1,gridCols:cols,gridRows:rows,pads,markers:[],openRanges:{},recentColors:[...PALETTE],elapsedMs:0,vibration:true,keepAwake:false};
+    }
+    function load(){
+      try{const raw=localStorage.getItem(STORAGE_KEY)||localStorage.getItem('timecode_logger_v5'); if(!raw) return fresh(); const parsed=JSON.parse(raw); const base={...fresh(),...parsed}; normalizePads(base); return base;}catch{return fresh();}
+    }
+    let data=load();
+
+    function normalizePads(target){
+      target.gridCols=Math.min(6,Math.max(1,Number(target.gridCols)||3));
+      target.gridRows=Math.min(8,Math.max(1,Number(target.gridRows)||3));
+      const total=target.gridCols*target.gridRows;
+      if(!Array.isArray(target.pads)) target.pads=[];
+      while(target.pads.length<total) target.pads.push(defaultPad(target.pads.length));
+      if(target.pads.length>total) target.pads=target.pads.slice(0,total);
+      if(!Array.isArray(target.markers)) target.markers=[];
+      target.pads.forEach(p=>p.mode='point');
+      if(!Array.isArray(target.recentColors)) target.recentColors=[...PALETTE];
+      if(typeof target.openRanges!=='object'||!target.openRanges) target.openRanges={};
+      target.quickPadIndex=Math.min(target.pads.length, Math.max(1,Number(target.quickPadIndex)||1));
+      target.srtMs=Math.min(3000,Math.max(300,Number(target.srtMs)||750));
+      if(!Number.isFinite(target.elapsedMs)) target.elapsedMs=0;
+    }
+
+    function markSaved(status='● Guardado'){ $('saveStatus').textContent=status; clearTimeout(markSaved.t); markSaved.t=setTimeout(()=>$('saveStatus').textContent='● Guardado',700); }
+    function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify({...data, elapsedMs:now()})); markSaved('● Guardando…'); }
+    function vibrate(ms=18){ if(data.vibration && navigator.vibrate) navigator.vibrate(ms); }
+    function now(){ return running ? data.elapsedMs + (performance.now()-startedPerf) : data.elapsedMs; }
+    function startClock(){ if(running) return; startedPerf=performance.now(); running=true; updateRunUi(); requestWake(); tick(); }
+    function stopClock(){ if(!running) return; data.elapsedMs=now(); running=false; cancelAnimationFrame(rafId); updateRunUi(); drawDisplay(); releaseWake(); save(); }
+    function toggleClock(){ vibrate(); running?stopClock():startClock(); }
+    function tick(){ drawDisplay(); rafId=requestAnimationFrame(tick); }
+    function pad2(n){ return String(n).padStart(2,'0'); }
+    function pad3(n){ return String(n).padStart(3,'0'); }
+    function exactFps(){ return Number(data.fps)||25; }
+    function nominalFps(){ return Math.round(exactFps()); }
+    function msToDisplayTC(ms){
+      const fps=exactFps(); const total=Math.max(0,Math.round(ms));
+      const hours=Math.floor(total/3600000), mins=Math.floor(total%3600000/60000), secs=Math.floor(total%60000/1000), rem=total%1000;
+      const frames=Math.min(nominalFps()-1, Math.floor(rem*fps/1000));
+      return `${pad2(hours)}:${pad2(mins)}:${pad2(secs)}:${pad2(frames)}`;
+    }
+    function msToStamp(ms, forSrt=false){
+      const total=Math.max(0,Math.round(ms));
+      const h=Math.floor(total/3600000), m=Math.floor(total%3600000/60000), s=Math.floor(total%60000/1000), n=total%1000;
+      return `${pad2(h)}:${pad2(m)}:${pad2(s)}${forSrt?',':'.'}${pad3(n)}`;
+    }
+    function msSigned(ms){ return `${ms<0?'-':'+'}${msToStamp(Math.abs(ms))}`; }
+    function parseStamp(str, signed=false){
+      const r=signed?/^([+-]?)(\d{2}):(\d{2}):(\d{2})(?:[.,](\d{1,3}))?$/:/^(\d{2}):(\d{2}):(\d{2})(?:[.,](\d{1,3}))?$/; const m=String(str||'').trim().match(r); if(!m) return null;
+      let sign=1,h,min,s,ms; if(signed){ sign=m[1]==='-'?-1:1; h=+m[2];min=+m[3];s=+m[4];ms=+(m[5]||'0').padEnd(3,'0'); }
+      else { h=+m[1];min=+m[2];s=+m[3];ms=+(m[4]||'0').padEnd(3,'0'); }
+      if(min>59||s>59) return null; return sign*(((h*60+min)*60+s)*1000+ms);
+    }
+    function parseTc(str){
+      const rate=nominalFps(); const m=String(str||'').trim().match(/^(\d{2}):(\d{2}):(\d{2}):(\d{2})$/); if(!m) return null;
+      const h=+m[1], mi=+m[2], s=+m[3], f=+m[4]; if(mi>59||s>59||f>=rate) return null; return ((h*3600+mi*60+s)*rate)+f;
+    }
+    function frameToTc(frame){ const rate=nominalFps(); let n=Math.max(0,Math.round(frame)); const f=n%rate; let sec=Math.floor(n/rate); const s=sec%60; sec=Math.floor(sec/60); const m=sec%60; const h=Math.floor(sec/60); return `${pad2(h)}:${pad2(m)}:${pad2(s)}:${pad2(f)}`; }
+    function pointMs(marker){ return marker.start + Number(data.offsetMs||0); }
+    function pointFrame(marker){ return Math.round(pointMs(marker)*exactFps()/1000); }
+    function colorInfo(color){ return COLOR_INFO[color] || {name:'MARK',icon:'🔖',resolve:'Blue'}; }
+    function prefixLabel(marker, mode){ const c=colorInfo(marker.color); if(mode==='none') return marker.label; if(mode==='icon') return `${c.icon} ${marker.label}`; return `[${c.name}] ${marker.label}`; }
+    function escapeHtml(s){ return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); }
+
+    function drawDisplay(){ const t=now(); $('clock').textContent=msToDisplayTC(t); $('realMsLabel').textContent=`LOCAL ${msToStamp(t).slice(0,8)}`; }
+    function updateRunUi(){ $('recLabel').textContent=running?'REC':'PAUSED'; $('recDot').classList.toggle('paused',!running); $('playBtn').textContent=running?'⏸':'▶';$('playBtn').classList.toggle('playing',running); }
+    function refreshHeader(){ $('renameBtn').querySelector('strong').textContent=data.name; $('projectMeta').textContent=`${data.gridCols}×${data.gridRows} · ${data.pads.length} teclas · ${data.fps} fps`; $('fpsLabel').textContent=`${data.fps} FPS`; $('timelineLabel').textContent=data.timelineTc; $('offsetLabel').textContent=`OFFSET ${msSigned(data.offsetMs)}`; $('projectName').value=data.name; $('fpsSetting').value=String(data.fps); $('timelineTc').value=data.timelineTc; $('offsetInput').value=msSigned(data.offsetMs); $('srtMs').value=data.srtMs; $('quickPadIndex').value=data.quickPadIndex; $('gridCols').value=data.gridCols; $('gridRows').value=data.gridRows; $('vibrationSetting').value=data.vibration?'on':'off'; $('keepAwakeSetting').value=data.keepAwake?'on':'off'; }
+    function refreshCounts(){ const mc=data.markers.length, rc=Object.keys(data.openRanges).length; $('markerCount').textContent=mc; $('openRangeCount').textContent=rc; $('summaryCount').textContent=mc; $('summaryRanges').textContent=rc; }
+    function message(text){ $('notice').textContent=text; clearTimeout(message.t); message.t=setTimeout(()=>{ if($('notice').textContent===text) $('notice').textContent=''; },3500); }
+
+    function recordPad(i){
+      const pad=data.pads[i]; if(!pad) return;
+      const t=now(); vibrate();
+      data.markers.push({id:crypto.randomUUID?crypto.randomUUID():'m_'+Date.now()+'_'+i,label:pad.label,color:pad.color,start:t,end:t,mode:'point'});
+      message(`Marca · ${pad.label}`); save(); renderGrid(); refreshCounts();
+    }
+    function undo(){ vibrate(); if(!data.markers.length){message('No hay marcas para deshacer');return;} const m=data.markers.pop();save();renderGrid();refreshCounts();message(`Eliminada · ${m.label}`); }
+    function setPadColor(pad,color){
+      if(!/^#[0-9a-fA-F]{6}$/.test(color)) return;
+      pad.color=color.toLowerCase();
+      data.recentColors=[pad.color,...(data.recentColors||PALETTE).filter(c=>c.toLowerCase()!==pad.color)].slice(0,6);
+      save();renderGrid();
+    }
+    function renderGrid(){
+      const grid=$('grid');grid.style.gridTemplateColumns=`repeat(${data.gridCols},minmax(0,1fr))`;grid.innerHTML='';
+      data.pads.forEach((pad,i)=>{
+        const card=document.createElement('article');card.className='pad'+(editMode?' editing':'');card.style.setProperty('--pad-color',pad.color);
+        if(editMode){
+          const ed=document.createElement('div');ed.className='pad-editor';
+          const inp=document.createElement('input');inp.className='pad-input';inp.value=pad.label;inp.maxLength=22;inp.setAttribute('aria-label','Nombre del botón');
+          inp.addEventListener('input',()=>{pad.label=inp.value.toUpperCase().slice(0,22);save();});
+          inp.addEventListener('blur',()=>{if(!pad.label.trim()){pad.label=`MARK ${i+1}`;inp.value=pad.label;save();}});ed.append(inp);
+          const swatches=document.createElement('div');swatches.className='swatches';
+          (data.recentColors||PALETTE).slice(0,6).forEach(c=>{const b=document.createElement('button');b.type='button';b.className='swatch'+(c.toLowerCase()===pad.color.toLowerCase()?' selected':'');b.style.setProperty('--swatch',c);b.title=c;b.setAttribute('aria-label','Color '+c);b.onclick=()=>setPadColor(pad,c);swatches.append(b);});ed.append(swatches);
+          const picker=document.createElement('label');picker.className='color-picker-row';picker.textContent='🎨 Cualquier color';
+          const input=document.createElement('input');input.type='color';input.value=/^#[0-9a-f]{6}$/i.test(pad.color)?pad.color:'#73f6cb';input.setAttribute('aria-label','Elegir cualquier color');
+          input.onchange=()=>setPadColor(pad,input.value);picker.append(input);ed.append(picker);card.append(ed);
+        }else{
+          const body=document.createElement('div');body.className='pad-body';body.innerHTML=`<div class="pad-label">${escapeHtml(pad.label)}</div>`;
+          const hit=document.createElement('button');hit.className='pad-hit';hit.type='button';hit.setAttribute('aria-label',pad.label);hit.onclick=()=>recordPad(i);card.append(body,hit);
+        }
+        grid.append(card);
+      });
+    }
+    function openHistory(){ const list=$('historyList'); list.innerHTML=''; const items=[...data.markers].sort((a,b)=>a.start-b.start); if(!items.length){ list.innerHTML='<div class="empty">No hay marcas aún.</div>'; } else { items.forEach(marker=>{ const item=document.createElement('div'); item.className='marker-item'; item.innerHTML=`<span class="marker-chip" style="background:${marker.color}"></span><div class="marker-info"><strong>${escapeHtml(prefixLabel(marker,'name'))}</strong><small>${msToStamp(marker.start)} · ${marker.mode==='range'?'rango hasta '+msToStamp(marker.end):'punto'} </small></div><button class="mini-btn" type="button">Editar</button>`; item.querySelector('button').addEventListener('click',()=>openMarkerEditor(marker.id)); list.appendChild(item); }); } $('historyDialog').showModal(); }
+    function openMarkerEditor(id){ const m=data.markers.find(x=>x.id===id); if(!m) return; editingMarkerId=id; $('markerLabelInput').value=m.label; $('markerStartInput').value=msToStamp(m.start); $('markerEndInput').value=msToStamp(m.end); $('historyDialog').close(); $('markerDialog').showModal(); }
+    function saveMarkerEdit(){ const m=data.markers.find(x=>x.id===editingMarkerId); if(!m) return; const label=($('markerLabelInput').value.trim()||m.label).toUpperCase(); const start=parseStamp($('markerStartInput').value); const end=parseStamp($('markerEndInput').value); if(start==null||end==null||end<start){ message('Revisa inicio y fin'); return; } Object.assign(m,{label,start,end}); save(); refreshCounts(); $('markerDialog').close(); openHistory(); }
+    function deleteMarker(){ if(!confirm('¿Eliminar esta marca?')) return; data.markers=data.markers.filter(m=>m.id!==editingMarkerId); save(); refreshCounts(); $('markerDialog').close(); openHistory(); }
+
+    function sanitizeName(ext){ const base=(data.name||'marcadores').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9_-]+/gi,'_').replace(/^_+|_+$/g,'').slice(0,80)||'marcadores'; return `${base}.${ext}`; }
+    function download(content,ext,type){ const blob=new Blob([content],{type}); const a=document.createElement('a'); const url=URL.createObjectURL(blob); a.href=url; a.download=sanitizeName(ext); document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),20000); }
+    function sortedMarkers(){ return [...data.markers].sort((a,b)=>a.start-b.start); }
+    function exportData(){ const format=$('exportFormat').value, prefixMode=$('prefixMode').value; if(format==='json'){ download(JSON.stringify({...data, elapsedMs:now()},null,2),'json','application/json'); return; } const markers=sortedMarkers(); if(!markers.length){ message('No hay marcas para exportar'); return; } if(markers.some(m=>pointMs(m)<0)){ message('El desfase genera tiempos negativos'); return; }
+      if(format==='srt'){ const s=markers.map((m,i)=>`${i+1}\n${msToStamp(pointMs(m),true)} --> ${msToStamp(pointMs(m)+data.srtMs,true)}\n${prefixLabel(m,prefixMode)}\n`).join('\n'); download(s,'srt','text/plain;charset=utf-8'); return; }
+      if(format==='csv'){ const rows=[['Etiqueta','Tiempo_ms','TC_display','Color','Tipo_local','Fin_local_ms']]; markers.forEach(m=>rows.push([prefixLabel(m,prefixMode), pointMs(m), msToDisplayTC(pointMs(m)), colorInfo(m.color).name, m.mode, m.end])); const csv='\ufeff'+rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\r\n'); download(csv,'csv','text/csv;charset=utf-8'); return; }
+      if(format==='edl'){ const ascii=t=>String(t).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7E]/g,' ').replace(/[|\r\n]+/g,' ').trim(); let lines=[`TITLE: ${ascii(data.name)}`,'FCM: NON-DROP FRAME','']; markers.forEach((m,i)=>{ const frame=Math.max(0, pointFrame(m)); const tc=frameToTc(frame); const next=frameToTc(frame+1); lines.push(`${String(i+1).padStart(3,'0')}  001      V     C        ${tc} ${next} ${tc} ${next}`); lines.push(` |C:ResolveColor${colorInfo(m.color).resolve} |M:${ascii(prefixLabel(m,prefixMode))} |D:1`); lines.push(''); }); download(lines.join('\r\n'),'edl','text/plain;charset=us-ascii'); return; }
+      if(format==='xml'){ const esc=x=>String(x).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&apos;'); const timebase=nominalFps(); const ntsc=Math.abs(exactFps()-timebase)>0.001?'TRUE':'FALSE'; const base=parseTc(data.timelineTc)??0; const end=Math.max(1,...markers.map(m=>base+pointFrame(m)+1)); const xmlMarkers=markers.map(m=>{ const f=base+pointFrame(m); return `<marker><name>${esc(prefixLabel(m,prefixMode))}</name><comment>${esc(colorInfo(m.color).name)}</comment><in>${f}</in><out>${f+1}</out></marker>`; }).join(''); const xml=`<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE xmeml>\n<xmeml version="4"><project><name>${esc(data.name)}</name><children><sequence id="sequence-1"><name>${esc(data.name)}</name><duration>${end}</duration><rate><timebase>${timebase}</timebase><ntsc>${ntsc}</ntsc></rate><timecode><rate><timebase>${timebase}</timebase><ntsc>${ntsc}</ntsc></rate><string>${esc(data.timelineTc)}</string><frame>${base}</frame><displayformat>NDF</displayformat></timecode><media><video><format><samplecharacteristics><rate><timebase>${timebase}</timebase><ntsc>${ntsc}</ntsc></rate><width>1920</width><height>1080</height><anamorphic>FALSE</anamorphic><pixelaspectratio>square</pixelaspectratio><fielddominance>none</fielddominance></samplecharacteristics></format><track/></video><audio><track/></audio></media>${xmlMarkers}</sequence></children></project></xmeml>`; download(xml,'xml','application/xml;charset=utf-8'); }
+    }
+
+    function applyTemplate(){ const name=$('templateSelect').value; const labels=TEMPLATES[name]||TEMPLATES.general; data.pads.forEach((pad,i)=>{ pad.label=(labels[i]||`MARK ${i+1}`).toUpperCase(); pad.color=PALETTE[i%PALETTE.length]; pad.mode='point'; }); data.openRanges={}; save(); renderGrid(); message(`Plantilla aplicada · ${name}`); }
+    function closeRanges(){ const ids=Object.keys(data.openRanges); if(!ids.length){ message('No hay rangos abiertos'); return; } const t=now(); ids.forEach(id=>{ const p=data.pads.find(x=>x.id===id); data.markers.push({id:crypto.randomUUID?crypto.randomUUID():'m_'+Date.now()+id,label:p?.label||'RANGO',color:p?.color||PALETTE[0],start:data.openRanges[id],end:t,mode:'range'}); }); data.openRanges={}; save(); renderGrid(); refreshCounts(); message('Rangos cerrados'); }
+    function resetProject(){ if(!confirm('¿Crear un proyecto nuevo?')) return; stopClock(); data=fresh(); save(); refreshAll(); $('projectPanel').classList.remove('hidden'); }
+    function updateGrid(){ data.gridCols=Math.min(6,Math.max(1,Number($('gridCols').value)||3)); data.gridRows=Math.min(8,Math.max(1,Number($('gridRows').value)||3)); normalizePads(data); save(); refreshAll(); }
+    function backup(){ download(JSON.stringify({...data, elapsedMs:now()},null,2),'json','application/json'); }
+    async function restore(file){ try{ const obj=JSON.parse(await file.text()); data={...fresh(),...obj}; normalizePads(data); save(); refreshAll(); message('Respaldo restaurado'); } catch { message('No se pudo restaurar el respaldo'); } }
+    async function requestWake(){ try{ if(!data.keepAwake || !('wakeLock' in navigator)) return; wakeLock=await navigator.wakeLock.request('screen'); } catch{} }
+    async function releaseWake(){ try{ await wakeLock?.release(); } catch{} wakeLock=null; }
+
+    function refreshAll(){ drawDisplay(); updateRunUi(); renderGrid(); refreshHeader(); refreshCounts(); }
+
+    $('fabBtn').onclick=()=>{const menu=$('bubbleMenu');menu.hidden=!menu.hidden;$('fabBtn').setAttribute('aria-expanded',String(!menu.hidden));$('fabBtn').textContent=menu.hidden?'⌃':'×';};
+    $('settingsBtn').onclick=()=>$('settingsDialog').showModal(); $('closeSettings').onclick=()=>$('settingsDialog').close(); $('renameBtn').onclick=()=>{$('projectPanel').classList.remove('hidden'); $('projectName').focus();}; $('playBtn').onclick=toggleClock; $('quickBtn').onclick=()=>recordPad(Math.min(data.pads.length-1,Math.max(0,Number(data.quickPadIndex)-1))); $('undoBtn').onclick=undo; $('editToggle').onclick=()=>{ editMode=!editMode; $('editToggle').classList.toggle('active',editMode); $('editToggle').querySelector('small').textContent=editMode?'Terminar':'Editar'; renderGrid(); message(editMode?'Edita directamente cada tecla':'Edición cerrada'); }; $('historyBtn').onclick=openHistory; $('closeHistory').onclick=()=>$('historyDialog').close(); $('projectBtn').onclick=()=>$('projectPanel').classList.toggle('hidden'); $('exportBtn').onclick=()=>{ $('exportSummary').textContent=`CapCut: SRT corto de ${data.srtMs} ms por marca. Resolve: EDL relativo desde 00:00:00:00 para evitar que se vaya a otra hora. Premiere: XML con timecode inicial de la secuencia.`; $('exportDialog').showModal(); }; $('cancelExport').onclick=()=>$('exportDialog').close(); $('confirmExport').onclick=()=>{ exportData(); $('exportDialog').close(); };
+    $('closeMarkerDialog').onclick=()=>{ $('markerDialog').close(); $('historyDialog').showModal(); }; $('saveMarkerBtn').onclick=saveMarkerEdit; $('deleteMarkerBtn').onclick=deleteMarker;
+    $('projectName').onchange=e=>{ data.name=(e.target.value.trim()||'GRABACIÓN NUEVA').toUpperCase(); save(); refreshHeader(); }; $('fpsSetting').onchange=e=>{ data.fps=e.target.value; save(); refreshAll(); }; $('timelineTc').onchange=e=>{ if(parseTc(e.target.value)==null){ message('Timecode inválido'); refreshHeader(); return; } data.timelineTc=e.target.value.trim(); save(); refreshHeader(); }; $('offsetInput').onchange=e=>{ const v=parseStamp(e.target.value,true); if(v==null){ message('Usa ±HH:MM:SS.mmm'); refreshHeader(); return; } data.offsetMs=v; save(); refreshHeader(); }; $('srtMs').onchange=e=>{ data.srtMs=Math.min(3000,Math.max(300,Number(e.target.value)||750)); save(); refreshHeader(); }; $('quickPadIndex').onchange=e=>{ data.quickPadIndex=Math.min(data.pads.length,Math.max(1,Number(e.target.value)||1)); save(); refreshHeader(); }; $('gridCols').onchange=updateGrid; $('gridRows').onchange=updateGrid; $('applyTemplateBtn').onclick=applyTemplate;  $('backupBtn').onclick=backup; $('restoreBtn').onclick=()=>$('restoreFile').click(); $('restoreFile').onchange=e=>{ const f=e.target.files[0]; if(f) restore(f); e.target.value=''; }; $('resetBtn').onclick=resetProject; $('vibrationSetting').onchange=e=>{ data.vibration=e.target.value==='on'; save(); }; $('keepAwakeSetting').onchange=e=>{ data.keepAwake=e.target.value==='on'; if(running){ releaseWake().then(requestWake); } save(); };
+
+    window.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') save(); else if(running){ releaseWake().then(requestWake); drawDisplay(); } }); window.addEventListener('pagehide',()=>save()); setInterval(()=>{ if(running) save(); },5000);
+    refreshAll(); if('serviceWorker' in navigator && location.protocol!=='file:') navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  </script>
+</body>
+</html>
